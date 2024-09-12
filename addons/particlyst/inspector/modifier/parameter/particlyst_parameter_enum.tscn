@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://bpbx1x0cp2nxs"]
+
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/parameter/particlyst_parameter_enum.gd" id="1_j28nu"]
+[ext_resource type="Texture2D" uid="uid://buo44vvld53ba" path="res://addons/particlyst/icon/particlyst_ui_revert.svg" id="2_l4xuc"]
+
+[node name="ParameterEnum" type="HBoxContainer"]
+offset_right = 350.0
+offset_bottom = 24.0
+size_flags_horizontal = 3
+script = ExtResource("1_j28nu")
+
+[node name="H" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Property name"
+
+[node name="RevertButton" type="Button" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_l4xuc")
+flat = true
+
+[node name="ValueOptionButton" type="OptionButton" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+mouse_default_cursor_shape = 2
+fit_to_longest_item = false
+
+[connection signal="item_selected" from="ValueOptionButton" to="." method="_on_value_option_button_item_selected"]

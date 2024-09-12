@@ -1,0 +1,36 @@
+[gd_scene load_steps=3 format=3 uid="uid://y1l33hqjherc"]
+
+[ext_resource type="Texture2D" uid="uid://buo44vvld53ba" path="res://addons/particlyst/icon/particlyst_ui_revert.svg" id="2_8g7kh"]
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/parameter/particlyst_parameter_color.gd" id="2_i8puc"]
+
+[node name="ParameterColor" type="HBoxContainer"]
+offset_right = 353.0
+offset_bottom = 24.0
+size_flags_horizontal = 3
+script = ExtResource("2_i8puc")
+
+[node name="H" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Property name"
+
+[node name="RevertButton" type="Button" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_8g7kh")
+flat = true
+
+[node name="ValueColorPickerButton" type="ColorPickerButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+mouse_default_cursor_shape = 2
+
+[connection signal="color_changed" from="ValueColorPickerButton" to="." method="_on_value_color_picker_button_color_changed"]

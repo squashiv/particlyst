@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3 uid="uid://d4gnetsvjiwnq"]
+
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/particlyst_modifiers_panel.gd" id="1_qjhov"]
+[ext_resource type="Texture2D" uid="uid://tnqw7xpmdt65" path="res://addons/particlyst/icon/particlyst_op_add.svg" id="2_4lfqj"]
+[ext_resource type="Script" path="res://addons/particlyst/inspector/particlyst_drag_container.gd" id="2_mba08"]
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/particlyst_modifier_type_option.gd" id="3_y0ly6"]
+
+[node name="ModifiersPanel" type="MarginContainer"]
+offset_right = 450.0
+offset_bottom = 150.0
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+script = ExtResource("1_qjhov")
+
+[node name="V" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="H" type="HBoxContainer" parent="V"]
+layout_mode = 2
+
+[node name="AddModifierButton" type="Button" parent="V/H"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+icon = ExtResource("2_4lfqj")
+
+[node name="AddModifierOptionButton" type="OptionButton" parent="V/H"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_default_cursor_shape = 2
+selected = 0
+fit_to_longest_item = false
+item_count = 1
+popup/item_0/text = "Add Modifier"
+popup/item_0/separator = true
+script = ExtResource("3_y0ly6")
+
+[node name="Sep" type="HSeparator" parent="V"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ModifiersCo" type="Container" parent="V"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(250, -4)
+layout_mode = 2
+mouse_filter = 0
+script = ExtResource("2_mba08")
+
+[connection signal="pressed" from="V/H/AddModifierButton" to="." method="_on_add_modifier_button_pressed"]
+[connection signal="item_selected" from="V/H/AddModifierOptionButton" to="." method="_on_add_modifier_option_button_item_selected"]
+[connection signal="child_moved" from="V/ModifiersCo" to="." method="_on_modifiers_co_child_moved"]

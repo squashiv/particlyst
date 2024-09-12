@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3 uid="uid://bbhfg7sk6omy0"]
+
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/parameter/particlyst_parameter_scalar.gd" id="1_kklut"]
+[ext_resource type="Texture2D" uid="uid://buo44vvld53ba" path="res://addons/particlyst/icon/particlyst_ui_revert.svg" id="2_ooide"]
+
+[node name="ParameterFloat" type="HBoxContainer"]
+offset_right = 350.0
+offset_bottom = 23.0
+size_flags_horizontal = 3
+mouse_filter = 2
+script = ExtResource("1_kklut")
+
+[node name="H" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Property name"
+
+[node name="RevertButton" type="Button" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_ooide")
+flat = true

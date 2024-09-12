@@ -1,0 +1,51 @@
+[gd_scene load_steps=3 format=3 uid="uid://cggktweel7fyp"]
+
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/parameter/particlyst_parameter_bool.gd" id="1_b38rv"]
+[ext_resource type="Texture2D" uid="uid://buo44vvld53ba" path="res://addons/particlyst/icon/particlyst_ui_revert.svg" id="2_p4qnw"]
+
+[node name="ParameterBool" type="HBoxContainer"]
+offset_right = 362.0
+offset_bottom = 32.0
+size_flags_horizontal = 3
+script = ExtResource("1_b38rv")
+
+[node name="H" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Property name"
+
+[node name="RevertButton" type="Button" parent="H"]
+unique_name_in_owner = true
+layout_mode = 2
+icon = ExtResource("2_p4qnw")
+flat = true
+
+[node name="Mr" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+
+[node name="Pa" type="Panel" parent="Mr"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Mr" type="MarginContainer" parent="Mr"]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ValueCheckBox" type="CheckBox" parent="Mr/Mr"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+mouse_default_cursor_shape = 2
+
+[connection signal="toggled" from="Mr/Mr/ValueCheckBox" to="." method="_on_value_check_box_toggled"]

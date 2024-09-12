@@ -1,0 +1,667 @@
+[gd_scene load_steps=31 format=3 uid="uid://bdku0iilileem"]
+
+[ext_resource type="Script" path="res://addons/particlyst/modifier/particlyst_modifier.gd" id="1_n8hbs"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/special/particlyst_modifier_lifetime.gd" id="2_gr6fo"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/shape/particlyst_modifier_sphere.gd" id="2_jr6so"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/value/particlyst_modifier_random.gd" id="3_baej7"]
+[ext_resource type="Script" path="res://addons/particlyst/particlyst_process_material_3d.gd" id="3_n0cey"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/value/particlyst_modifier_blend.gd" id="4_f3gq0"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/value/particlyst_modifier_uniform.gd" id="5_uayak"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/special/particlyst_modifier_seed.gd" id="6_yrsja"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/shape/particlyst_modifier_plane.gd" id="7_dosvk"]
+[ext_resource type="Script" path="res://addons/particlyst/modifier/special/particlyst_modifier_apply_rotation.gd" id="9_p561d"]
+
+[sub_resource type="Resource" id="rk78g"]
+script = ExtResource("2_gr6fo")
+randomness = 100.0
+enabled = true
+target_property = 7
+operation = -1
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="3cpkm"]
+script = ExtResource("6_yrsja")
+custom = 12
+enabled = true
+target_property = 7
+operation = -1
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="c5j7n"]
+script = ExtResource("2_jr6so")
+radius = 0.25
+hollowness = 0.0
+on_start = true
+as_velocity = true
+enabled = true
+target_property = 2
+operation = 2
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="cv72j"]
+script = ExtResource("3_baej7")
+value_min = Color(0.963952, 0.438408, 0.712852, 1)
+value_max = Color(0.278949, 0.760446, 0.422595, 1)
+uniform = true
+enabled = true
+target_property = 0
+operation = 0
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="c17u2"]
+script = ExtResource("3_baej7")
+value_min = Vector3(-1, -1, -1)
+value_max = Vector3(1, 1, 1)
+uniform = false
+enabled = true
+target_property = 5
+operation = 2
+metadata/_expanded = false
+metadata/_sliders_shared = true
+
+[sub_resource type="Resource" id="2riex"]
+script = ExtResource("4_f3gq0")
+value_a = Vector3(1, 1, 1)
+value_b = Vector3(0, 0, 0)
+blend_source = 0
+trans = 0
+ease = 0
+ping_pong = true
+spacing = Vector2(0, 0)
+enabled = true
+target_property = 4
+operation = 0
+metadata/_expanded = false
+metadata/_sliders_shared = true
+
+[sub_resource type="Shader" id="Shader_awnyd"]
+code = "shader_type particles;
+render_mode disable_force, disable_velocity;
+
+// RANDOM
+uint hash(uint x) {
+	x = ((x >> uint(16)) ^ x) * uint(73244475);
+	x = ((x >> uint(16)) ^ x) * uint(73244475);
+	x = (x >> uint(16)) ^ x;
+	return x;
+}
+
+uint rand_from_seed_uint(inout uint seed) {
+	int k;
+	int s = int(seed);
+	if (s == 0)
+	s = 305420679;
+	k = s / 127773;
+	s = 16807 * (s - k * 127773) - 2836 * k;
+	if (s < 0)
+		s += 2147483647;
+	seed = uint(s);
+	return seed % uint(65536);
+}
+
+float rand_from_seed(inout uint seed) {
+	return float(rand_from_seed_uint(seed)) / 65535.0;
+}
+
+float rand_from_seed_float(inout uint seed) {
+	return rand_from_seed(seed);
+}
+
+vec2 rand_from_seed_vec2(inout uint seed) {
+	return vec2(rand_from_seed(seed), rand_from_seed(seed));
+}
+
+vec3 rand_from_seed_vec3(inout uint seed) {
+	return vec3(rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed));
+}
+
+vec4 rand_from_seed_vec4(inout uint seed) {
+	return vec4(rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed));
+}
+
+float randf_range(inout uint seed, in float from, in float to) {
+	return rand_from_seed(seed) * (to - from) + from;
+}
+
+vec2 random_axis_vec2(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec2(
+		float(r % uint(2) == uint(0)),
+		float(r % uint(2) == uint(1))
+	);
+}
+
+vec3 random_axis_vec3(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec3(
+		float(r % uint(3) == uint(0)),
+		float(r % uint(3) == uint(1)),
+		float(r % uint(3) == uint(2))
+	);
+}
+
+vec4 random_axis_vec4(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec4(
+		float(r % uint(4) == uint(0)),
+		float(r % uint(4) == uint(1)),
+		float(r % uint(4) == uint(2)),
+		float(r % uint(4) == uint(3))
+	);
+}
+// RANDOM
+
+// TRANSFORM
+mat4 rotation_matrix(vec3 axis, float angle) {
+	float s = sin(angle);
+	float c = cos(angle);
+	float oc = 1.0 - c;
+	return mat4(
+		vec4(oc * axis.x * axis.x + c, oc * axis.x * axis.y - axis.z * s, oc * axis.z * axis.x + axis.y * s, 0),
+		vec4(oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c, oc * axis.y * axis.z - axis.x * s, 0),
+		vec4(oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s, oc * axis.z * axis.z + c, 0),
+		vec4(0, 0, 0, 1)
+	);
+}
+
+mat4 scale_matrix(vec3 p_scale) {
+	return mat4(
+		vec4(p_scale.x, 0, 0, 0),
+		vec4(0, p_scale.y, 0, 0),
+		vec4(0, 0, p_scale.z, 0),
+		vec4(0, 0, 0, 1)
+	);
+}
+
+mat4 apply_rotation(mat4 p_transform, vec3 p_euler_angles) {
+	p_transform *= rotation_matrix(vec3(1, 0, 0), p_euler_angles.x);
+	p_transform *= rotation_matrix(vec3(0, 1, 0), p_euler_angles.y);
+	p_transform *= rotation_matrix(vec3(0, 0, 1), p_euler_angles.z);
+	return p_transform;
+}
+// TRANSFORM
+
+#define ACCUM_VELOCITY USERDATA1.xyz
+#define PARTICLE_AGE USERDATA1.w
+#define START_VELOCITY USERDATA4.xyz
+
+// USER DEFINES
+#if defined(PARTICLE_AGE_PERCENT_SETUP)
+#undef PARTICLE_AGE_PERCENT_SETUP
+#endif
+#define PARTICLE_AGE_PERCENT_SETUP float PARTICLE_AGE_PERCENT = PARTICLE_AGE / (LIFETIME * (1.0 - u_rk78g_lifetime_randomness * rand_from_seed(seed)));
+#if defined(RANDOM_SEED_SETUP)
+#undef RANDOM_SEED_SETUP
+#endif
+#define RANDOM_SEED_SETUP(base) uint seed = hash(INDEX + uint(base) + uint(u_3cpkm_custom_seed));
+
+uniform float lifetime_randomness : hint_range(0, 1) = 0;
+uniform float inherit_emitter_velocity_start : hint_range(-2, 2) = 0;
+uniform float inherit_emitter_velocity_update : hint_range(-2, 2) = 0;
+
+// USER UNIFORMS
+uniform float u_rk78g_lifetime_randomness;
+uniform int u_3cpkm_custom_seed;
+uniform float u_c5j7n_hollowness;
+uniform float u_c5j7n_radius;
+uniform vec4 u_cv72j_value_min : source_color;
+uniform vec4 u_cv72j_value_max : source_color;
+uniform vec3 u_c17u2_value_min;
+uniform vec3 u_c17u2_value_max;
+uniform vec3 u_2riex_value_a;
+uniform vec3 u_2riex_value_b;
+
+// USER FUNCTIONS
+vec3 shape_sphere(inout uint p_seed, float p_radius, float p_hollowness, out vec3 p_dir) {
+	float phi = rand_from_seed(p_seed) * TAU;
+	float costheta = rand_from_seed(p_seed) * 2.0 - 1.0;
+	float u = rand_from_seed(p_seed);
+	float theta = acos(costheta);
+	float r = mix(p_radius * pow(u, 0.333333), p_radius, p_hollowness);
+	p_dir = vec3(
+		sin(theta) * cos(phi),
+		sin(theta) * sin(phi),
+		cos(theta)
+	);
+	return p_dir * r;
+}
+
+void start() {
+#if defined(RANDOM_SEED_SETUP)
+	RANDOM_SEED_SETUP(573)
+#else
+	uint seed = hash(NUMBER + uint(573) + RANDOM_SEED);
+#endif
+	
+	if (rand_from_seed(seed) > AMOUNT_RATIO) {
+		ACTIVE = false;
+	}
+
+	ACCUM_VELOCITY = vec3(0);
+	PARTICLE_AGE = 0.0;
+	START_VELOCITY = vec3(0);
+	COLOR = vec4(1);
+	vec3 POSITION = vec3(0);
+	vec3 ROTATION = vec3(0);
+	vec3 SCALE = vec3(1);
+	VELOCITY = vec3(0);
+	TRANSFORM = mat4(1);
+	CUSTOM = vec4(1);
+	
+	// USER START
+	vec3 l_c5j7n_dir;
+POSITION += shape_sphere(seed, u_c5j7n_radius, u_c5j7n_hollowness, l_c5j7n_dir);
+VELOCITY += l_c5j7n_dir;
+	
+	VELOCITY += EMITTER_VELOCITY * inherit_emitter_velocity_start;
+	
+	START_VELOCITY += VELOCITY;
+	
+	TRANSFORM[3].xyz = POSITION;
+	TRANSFORM = EMISSION_TRANSFORM * TRANSFORM;
+	ACCUM_VELOCITY += TRANSFORM[3].xyz;
+	
+	TRANSFORM = mat4(1);
+}
+
+void process() {
+#if defined(RANDOM_SEED_SETUP)
+	RANDOM_SEED_SETUP(430)
+#else
+	uint seed = hash(NUMBER + uint(430) + RANDOM_SEED);
+#endif
+	
+	PARTICLE_AGE += DELTA;
+	COLOR = vec4(1);
+	float ALPHA = 1.0;
+	vec3 POSITION = vec3(0);
+	vec3 ROTATION = vec3(0);
+	vec3 SCALE = vec3(1);
+	VELOCITY = vec3(0);
+	TRANSFORM = mat4(1);
+	CUSTOM = vec4(1);
+	
+#if defined(PARTICLE_AGE_PERCENT_SETUP)
+	PARTICLE_AGE_PERCENT_SETUP
+#else
+	float PARTICLE_AGE_PERCENT = PARTICLE_AGE / LIFETIME;
+#endif
+	
+	// USER PROCESS
+	COLOR *= mix(u_cv72j_value_min, u_cv72j_value_max, rand_from_seed(seed));
+	VELOCITY += mix(u_c17u2_value_min, u_c17u2_value_max, rand_from_seed_vec3(seed));
+	SCALE *= mix(u_2riex_value_a, u_2riex_value_b, PARTICLE_AGE_PERCENT);
+	
+	COLOR.a *= ALPHA;
+	
+	VELOCITY += START_VELOCITY;
+	
+	VELOCITY += EMITTER_VELOCITY * inherit_emitter_velocity_update;
+	ACCUM_VELOCITY += VELOCITY * DELTA;
+	POSITION += ACCUM_VELOCITY;
+	
+	TRANSFORM = apply_rotation(TRANSFORM, radians(ROTATION));
+	TRANSFORM *= scale_matrix(SCALE);
+	TRANSFORM[3].xyz = POSITION;
+	
+	if (PARTICLE_AGE_PERCENT > 1.0) {
+		ACTIVE = false;
+	}
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ow1gf"]
+shader = SubResource("Shader_awnyd")
+shader_parameter/lifetime_randomness = 0.0
+shader_parameter/inherit_emitter_velocity_start = 0.0
+shader_parameter/inherit_emitter_velocity_update = 0.0
+shader_parameter/u_rk78g_lifetime_randomness = 1.0
+shader_parameter/u_3cpkm_custom_seed = 12
+shader_parameter/u_c5j7n_hollowness = 0.0
+shader_parameter/u_c5j7n_radius = 0.25
+shader_parameter/u_cv72j_value_min = Color(0.963952, 0.438408, 0.712852, 1)
+shader_parameter/u_cv72j_value_max = Color(0.278949, 0.760446, 0.422595, 1)
+shader_parameter/u_c17u2_value_min = Vector3(-1, -1, -1)
+shader_parameter/u_c17u2_value_max = Vector3(1, 1, 1)
+shader_parameter/u_2riex_value_a = Vector3(1, 1, 1)
+shader_parameter/u_2riex_value_b = Vector3(0, 0, 0)
+script = ExtResource("3_n0cey")
+modifiers = Array[ExtResource("1_n8hbs")]([SubResource("rk78g"), SubResource("3cpkm"), SubResource("c5j7n"), SubResource("cv72j"), SubResource("c17u2"), SubResource("2riex")])
+
+[sub_resource type="Shader" id="Shader_ewiqc"]
+code = "shader_type spatial;
+render_mode unshaded;
+
+void fragment() {
+	ALBEDO = COLOR.rgb * dot(VIEW, NORMAL);
+	ALPHA = COLOR.a;
+	ALPHA_HASH_SCALE = 0.01;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qnw8w"]
+render_priority = 0
+shader = SubResource("Shader_ewiqc")
+
+[sub_resource type="BoxMesh" id="BoxMesh_i8184"]
+material = SubResource("ShaderMaterial_qnw8w")
+size = Vector3(0.1, 0.1, 0.1)
+
+[sub_resource type="Resource" id="wyy0l"]
+script = ExtResource("7_dosvk")
+size = Vector2(2, 2)
+hollowness = 0.0
+on_start = true
+as_velocity = false
+enabled = true
+target_property = 2
+operation = 2
+metadata/_expanded = false
+metadata/_sliders_shared = true
+
+[sub_resource type="Resource" id="4k8bv"]
+script = ExtResource("3_baej7")
+value_min = Vector3(360, 360, 360)
+value_max = Vector3(-360, -360, -360)
+uniform = false
+enabled = true
+target_property = 3
+operation = 2
+metadata/_expanded = false
+metadata/_sliders_shared = true
+
+[sub_resource type="Resource" id="yh3et"]
+script = ExtResource("5_uayak")
+value = Color(1, 1, 1, 1)
+enabled = true
+target_property = 0
+operation = 0
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="14ach"]
+script = ExtResource("5_uayak")
+value = Vector3(1, 2, 1)
+enabled = true
+target_property = 4
+operation = 0
+metadata/_expanded = false
+metadata/_sliders_shared = false
+
+[sub_resource type="Resource" id="jlv6n"]
+script = ExtResource("9_p561d")
+enabled = true
+target_property = 7
+operation = -1
+metadata/_expanded = false
+
+[sub_resource type="Resource" id="lsv5t"]
+script = ExtResource("4_f3gq0")
+value_a = Vector3(0, -360, 0)
+value_b = Vector3(0, 360, 0)
+blend_source = 0
+trans = 0
+ease = 0
+ping_pong = true
+spacing = Vector2(0, 0)
+enabled = true
+target_property = 3
+operation = 2
+metadata/_expanded = false
+metadata/_sliders_shared = false
+
+[sub_resource type="Resource" id="0y5ei"]
+script = ExtResource("3_baej7")
+value_min = Color(0, 0, 0, 1)
+value_max = Color(1, 1, 1, 1)
+uniform = false
+enabled = true
+target_property = 0
+operation = 0
+metadata/_expanded = false
+
+[sub_resource type="Shader" id="Shader_bvau3"]
+code = "shader_type particles;
+render_mode disable_force, disable_velocity;
+
+// RANDOM
+uint hash(uint x) {
+	x = ((x >> uint(16)) ^ x) * uint(73244475);
+	x = ((x >> uint(16)) ^ x) * uint(73244475);
+	x = (x >> uint(16)) ^ x;
+	return x;
+}
+
+uint rand_from_seed_uint(inout uint seed) {
+	int k;
+	int s = int(seed);
+	if (s == 0)
+	s = 305420679;
+	k = s / 127773;
+	s = 16807 * (s - k * 127773) - 2836 * k;
+	if (s < 0)
+		s += 2147483647;
+	seed = uint(s);
+	return seed % uint(65536);
+}
+
+float rand_from_seed(inout uint seed) {
+	return float(rand_from_seed_uint(seed)) / 65535.0;
+}
+
+float rand_from_seed_float(inout uint seed) {
+	return rand_from_seed(seed);
+}
+
+vec2 rand_from_seed_vec2(inout uint seed) {
+	return vec2(rand_from_seed(seed), rand_from_seed(seed));
+}
+
+vec3 rand_from_seed_vec3(inout uint seed) {
+	return vec3(rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed));
+}
+
+vec4 rand_from_seed_vec4(inout uint seed) {
+	return vec4(rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed), rand_from_seed(seed));
+}
+
+float randf_range(inout uint seed, in float from, in float to) {
+	return rand_from_seed(seed) * (to - from) + from;
+}
+
+vec2 random_axis_vec2(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec2(
+		float(r % uint(2) == uint(0)),
+		float(r % uint(2) == uint(1))
+	);
+}
+
+vec3 random_axis_vec3(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec3(
+		float(r % uint(3) == uint(0)),
+		float(r % uint(3) == uint(1)),
+		float(r % uint(3) == uint(2))
+	);
+}
+
+vec4 random_axis_vec4(inout uint p_seed) {
+	uint r = rand_from_seed_uint(p_seed);
+	return vec4(
+		float(r % uint(4) == uint(0)),
+		float(r % uint(4) == uint(1)),
+		float(r % uint(4) == uint(2)),
+		float(r % uint(4) == uint(3))
+	);
+}
+// RANDOM
+
+// TRANSFORM
+mat4 rotation_matrix(in vec3 axis, in float angle) {
+	float s = sin(angle);
+	float c = cos(angle);
+	float oc = 1.0 - c;
+	return mat4(
+		vec4(oc * axis.x * axis.x + c, oc * axis.x * axis.y - axis.z * s, oc * axis.z * axis.x + axis.y * s, 0),
+		vec4(oc * axis.x * axis.y + axis.z * s, oc * axis.y * axis.y + c, oc * axis.y * axis.z - axis.x * s, 0),
+		vec4(oc * axis.z * axis.x - axis.y * s, oc * axis.y * axis.z + axis.x * s, oc * axis.z * axis.z + c, 0),
+		vec4(0, 0, 0, 1)
+	);
+}
+
+mat4 scale_matrix(in vec3 p_scale) {
+	return mat4(
+		vec4(p_scale.x, 0, 0, 0),
+		vec4(0, p_scale.y, 0, 0),
+		vec4(0, 0, p_scale.z, 0),
+		vec4(0, 0, 0, 1)
+	);
+}
+
+mat4 apply_rotation(mat4 p_transform, vec3 p_euler_angles) {
+	p_transform *= rotation_matrix(vec3(1, 0, 0), p_euler_angles.x);
+	p_transform *= rotation_matrix(vec3(0, 1, 0), p_euler_angles.y);
+	p_transform *= rotation_matrix(vec3(0, 0, 1), p_euler_angles.z);
+	return p_transform;
+}
+// TRANSFORM
+
+#define ACCUM_VELOCITY USERDATA1.xyz
+#define PARTICLE_AGE USERDATA1.w
+#define START_VELOCITY USERDATA4.xyz
+
+// USER DEFINES
+
+
+uniform float lifetime_randomness : hint_range(0, 1) = 0;
+uniform float inherit_emitter_velocity_start : hint_range(-2, 2) = 0;
+uniform float inherit_emitter_velocity_update : hint_range(-2, 2) = 0;
+
+// USER UNIFORMS
+uniform float u_wyy0l_hollowness;
+uniform vec2 u_wyy0l_size;
+uniform vec3 u_4k8bv_value_min;
+uniform vec3 u_4k8bv_value_max;
+uniform vec4 u_yh3et_value : source_color;
+uniform vec3 u_14ach_value;
+uniform vec3 u_lsv5t_value_a;
+uniform vec3 u_lsv5t_value_b;
+uniform vec4 u_0y5ei_value_min : source_color;
+uniform vec4 u_0y5ei_value_max : source_color;
+
+// USER FUNCTIONS
+vec3 shape_plane(inout uint p_seed, vec2 p_size, float p_hollowness, out vec3 p_dir) {
+	vec2 axis = random_axis_vec2(p_seed);
+	vec2 hollowness = axis * (p_hollowness * 0.5 + 0.5);
+	vec2 p = rand_from_seed_vec2(p_seed);
+	p = mix(p, vec2(1), hollowness) * 2.0 - 1.0;
+	float sig = round(rand_from_seed(p_seed)) * 2.0 - 1.0;
+	p *= p_size * sig;
+	p_dir = vec3(axis.x, 0, axis.y) * sig;
+	return vec3(p.x, 0, p.y);
+}
+
+void start() {
+	uint seed = hash(NUMBER + uint(31) + RANDOM_SEED);
+	
+	if (rand_from_seed(seed) > AMOUNT_RATIO) {
+		ACTIVE = false;
+	}
+
+	ACCUM_VELOCITY = vec3(0);
+	PARTICLE_AGE = 0.0;
+	START_VELOCITY = vec3(0);
+	COLOR = vec4(1);
+	vec3 POSITION = vec3(0);
+	vec3 ROTATION = vec3(0);
+	vec3 SCALE = vec3(1);
+	VELOCITY = vec3(0);
+	TRANSFORM = mat4(1);
+	CUSTOM = vec4(1);
+	
+	// USER START
+	vec3 l_wyy0l_dir;
+POSITION += shape_plane(seed, u_wyy0l_size, u_wyy0l_hollowness, l_wyy0l_dir);
+	
+	VELOCITY += EMITTER_VELOCITY * inherit_emitter_velocity_start;
+	
+	START_VELOCITY += VELOCITY;
+	
+	TRANSFORM[3].xyz = POSITION;
+	TRANSFORM = EMISSION_TRANSFORM * TRANSFORM;
+	ACCUM_VELOCITY += TRANSFORM[3].xyz;
+	
+	TRANSFORM = mat4(1);
+}
+
+void process() {
+	uint seed = hash(NUMBER + uint(69) + RANDOM_SEED);
+	
+	PARTICLE_AGE += DELTA;
+	COLOR = vec4(1);
+	float ALPHA = 1.0;
+	vec3 POSITION = vec3(0);
+	vec3 ROTATION = vec3(0);
+	vec3 SCALE = vec3(1);
+	VELOCITY = vec3(0);
+	TRANSFORM = mat4(1);
+	CUSTOM = vec4(1);
+	
+	float PARTICLE_AGE_PERCENT = PARTICLE_AGE / LIFETIME;
+	
+	// USER PROCESS
+	ROTATION += mix(u_4k8bv_value_min, u_4k8bv_value_max, rand_from_seed_vec3(seed));
+	COLOR *= u_yh3et_value;
+	SCALE *= u_14ach_value;
+	TRANSFORM = apply_rotation(TRANSFORM, radians(ROTATION));
+	ROTATION = vec3(0);
+	ROTATION += mix(u_lsv5t_value_a, u_lsv5t_value_b, PARTICLE_AGE_PERCENT);
+	COLOR *= mix(u_0y5ei_value_min, u_0y5ei_value_max, rand_from_seed_vec4(seed));
+	
+	COLOR.a *= ALPHA;
+	
+	VELOCITY += START_VELOCITY;
+	
+	VELOCITY += EMITTER_VELOCITY * inherit_emitter_velocity_update;
+	ACCUM_VELOCITY += VELOCITY * DELTA;
+	POSITION += ACCUM_VELOCITY;
+	
+	TRANSFORM = apply_rotation(TRANSFORM, radians(ROTATION));
+	TRANSFORM *= scale_matrix(SCALE);
+	TRANSFORM[3].xyz = POSITION;
+	
+	if (PARTICLE_AGE_PERCENT > 1.0) {
+		ACTIVE = false;
+	}
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xusrs"]
+shader = SubResource("Shader_bvau3")
+shader_parameter/lifetime_randomness = 0.0
+shader_parameter/inherit_emitter_velocity_start = 0.0
+shader_parameter/inherit_emitter_velocity_update = 0.0
+shader_parameter/u_wyy0l_hollowness = 0.0
+shader_parameter/u_wyy0l_size = Vector2(1, 1)
+shader_parameter/u_4k8bv_value_min = Vector3(360, 360, 360)
+shader_parameter/u_4k8bv_value_max = Vector3(-360, -360, -360)
+shader_parameter/u_yh3et_value = Color(1, 1, 1, 1)
+shader_parameter/u_14ach_value = Vector3(1, 2, 1)
+shader_parameter/u_lsv5t_value_a = Vector3(0, -360, 0)
+shader_parameter/u_lsv5t_value_b = Vector3(0, 360, 0)
+shader_parameter/u_0y5ei_value_min = Color(0, 0, 0, 1)
+shader_parameter/u_0y5ei_value_max = Color(1, 1, 1, 1)
+script = ExtResource("3_n0cey")
+modifiers = Array[ExtResource("1_n8hbs")]([SubResource("wyy0l"), SubResource("4k8bv"), SubResource("yh3et"), SubResource("14ach"), SubResource("jlv6n"), SubResource("lsv5t"), SubResource("0y5ei")])
+
+[node name="ParticlystDemo" type="Node3D"]
+
+[node name="Burst" type="GPUParticles3D" parent="."]
+amount = 128
+explosiveness = 1.0
+process_material = SubResource("ShaderMaterial_ow1gf")
+draw_pass_1 = SubResource("BoxMesh_i8184")
+
+[node name="Rotation" type="GPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0)
+amount = 32
+lifetime = 5.0
+process_material = SubResource("ShaderMaterial_xusrs")
+draw_pass_1 = SubResource("BoxMesh_i8184")

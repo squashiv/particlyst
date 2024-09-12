@@ -1,0 +1,80 @@
+[gd_scene load_steps=5 format=3 uid="uid://cujiqwmpjayei"]
+
+[ext_resource type="Script" path="res://addons/particlyst/inspector/modifier/parameter/particlyst_parameter_texture_display.gd" id="1_gs2ld"]
+[ext_resource type="Texture2D" uid="uid://buo44vvld53ba" path="res://addons/particlyst/icon/particlyst_ui_revert.svg" id="2_uh6hc"]
+
+[sub_resource type="Shader" id="Shader_5eluj"]
+code = "shader_type canvas_item;
+
+// https://www.shadertoy.com/view/slX3W2
+
+uniform vec4 line_color : source_color = vec4(1, 1, 1, 1);
+uniform vec4 background_color : source_color = vec4(0.25, 0.25, 0.25, 1);
+uniform float line_width = 0.01;
+uniform float delta = 0.005;
+uniform sampler2D curve_tex;
+
+float plot(vec2 uv, vec2 p, vec2 pDelta){
+	vec2 dt = pDelta - p;
+	float cosPhi = dt.x / length(dt); //cos(atan(delta.y, delta.x));
+	float height = line_width / 2.0 / cosPhi;
+	return abs(uv.y - p.y) - height;
+}
+
+void fragment() {
+	vec2 uv = vec2(UV.x * 1.1 - 0.05, (1.0 - UV.y) * 1.2 - 0.1);
+	
+	vec2 grid = fract(uv * vec2(4, 2));
+	grid.x = float(grid.x < 0.015 || grid.x > 0.985);
+	grid.y = float(grid.y < 0.01 || grid.y > 0.99);
+	grid = vec2(max(grid.x, grid.y));
+	vec4 col = mix(background_color, line_color, grid.x * 0.25);
+	
+	vec2 p = vec2(uv.x, texture(curve_tex, vec2(uv.x, 0)).r);
+	vec2 pDelta = vec2(uv.x + delta, texture(curve_tex, vec2(uv.x + delta, 0)).r);
+	float d = plot(uv, p, pDelta);
+	d = 1.0 - smoothstep(0, 0.01, d);
+	
+	if (uv.x > 0.0 && uv.x < 1.0)
+		col = mix(col, line_color, d);
+	
+	COLOR *= col;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_rnf6l"]
+shader = SubResource("Shader_5eluj")
+shader_parameter/line_color = Color(1, 1, 1, 1)
+shader_parameter/background_color = Color(0, 0, 0, 0.196078)
+shader_parameter/line_width = 0.01
+shader_parameter/delta = 0.005
+
+[node name="ParameterTextureDisplay" type="HBoxContainer"]
+offset_right = 362.0
+offset_bottom = 32.0
+size_flags_horizontal = 3
+script = ExtResource("1_gs2ld")
+
+[node name="H" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="H"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Property name"
+
+[node name="RevertButton" type="Button" parent="H"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+icon = ExtResource("2_uh6hc")
+flat = true
+
+[node name="Curve" type="ColorRect" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_rnf6l")
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
